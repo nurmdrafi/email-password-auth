@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword,
   getAuth,
   sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { Button, Form } from "react-bootstrap";
@@ -28,6 +29,17 @@ function App() {
   const handleRegisteredChange = (event) => {
     setRegistered(event.target.checked);
   };
+
+  const handlePasswordReset = () => {
+    sendPasswordResetEmail(auth, email)
+  .then(() => {
+    console.log("Password reset email sent!")
+  })
+  .catch((error) => {
+    console.error(error)
+  });
+  };
+
   const handleFormSubmit = (event) => {
     event.preventDefault();
 
@@ -36,6 +48,7 @@ function App() {
       event.stopPropagation();
       return;
     }
+
     if (
       !/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/.test(
         password
@@ -69,9 +82,10 @@ function App() {
           console.log(user);
           setEmail("");
           setPassword("");
+
           // Email verification
           sendEmailVerification(auth.currentUser).then(() => {
-            console.log("Email verification send")
+            console.log("Email verification send");
           });
         })
         .catch((error) => {
@@ -102,7 +116,6 @@ function App() {
               We'll never share your email with anyone else.
             </Form.Text>
           </Form.Group>
-
           <Form.Group className="mb-3" controlId="formBasicPassword">
             <Form.Label>Password</Form.Label>
             <Form.Control
@@ -115,9 +128,7 @@ function App() {
               Please provide a valid password.
             </Form.Control.Feedback>
           </Form.Group>
-
           <p className="text-danger">{error}</p>
-
           <Form.Group className="mb-3" controlId="formBasicCheckbox">
             <Form.Check
               onChange={handleRegisteredChange}
@@ -125,6 +136,14 @@ function App() {
               label="Already Registered?"
             />
           </Form.Group>
+          <Button
+            onClick={handlePasswordReset}
+            variant="link"
+            className="p-0 mb-3"
+          >
+            Forget Password?
+          </Button>{" "}
+          <br />
           <Button variant="primary" type="submit">
             {registered ? "Login" : "Register"}
           </Button>
