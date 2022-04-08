@@ -21,19 +21,26 @@ function App() {
   };
 
   const handleFormSubmit = (event) => {
-    // const form = event.currentTarget;
-    // if (form.checkValidity() === false) {
-    //   event.preventDefault();
-    //   event.stopPropagation();
-    // }
-    // if (!/(?=.*[A-Z].*[A-Z])/.test(password)) {
-    //   setError("Password Must contain 2 upper case");
-    //   return;
-    // }
-
     event.preventDefault();
-    setValidated(true);
 
+    const form = event.currentTarget;
+    if (form.checkValidity() === false) {
+      event.stopPropagation();
+      return;
+    }
+    if (
+      !/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/.test(
+        password
+      )
+    ) {
+      setError(
+        "Password should contain minimum eight characters, at least one letter, one number and one special character"
+      );
+      return;
+    }
+
+    setValidated(true);
+    setError("");
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
@@ -78,9 +85,11 @@ function App() {
             </Form.Control.Feedback>
           </Form.Group>
 
-          <Form.Group className="mb-3" controlId="formBasicCheckbox">
-            <Form.Check type="checkbox" label="Check me out" />
-          </Form.Group>
+          <p className="text-danger">{error}</p>
+
+          {/* <Form.Group className="mb-3" controlId="formBasicCheckbox">
+          <Form.Check type="checkbox" label="Check me out" />
+          </Form.Group>  */}
           <Button variant="primary" type="submit">
             Submit
           </Button>
