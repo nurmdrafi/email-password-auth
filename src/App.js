@@ -14,17 +14,31 @@ import { useState } from "react";
 const auth = getAuth(app);
 
 function App() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState({ value: "", error: "" });
   const [registered, setRegistered] = useState(false);
-  const [error, setError] = useState("");
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState({ value: "", error: "" });
   const [validated, setValidated] = useState(false);
 
   const handleEmailBlur = (event) => {
-    setEmail(event.target.value);
+    if (
+      !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(event.target.value)
+    ) {
+      setEmail({ value: "", error: "Please provide valid email." });
+    } else {
+      setEmail({ value: "event.target.value", error: "" });
+    }
   };
+
   const handlePasswordBlur = (event) => {
-    setPassword(event.target.value);
+    if (
+      !/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/.test(
+        event.target.value
+      )
+    ) {
+      setPassword({ value: "", error: "Please provide a valid password." });
+    } else {
+      setPassword({ value: "event.target.value", error: "" });
+    }
   };
   const handleRegisteredChange = (event) => {
     setRegistered(event.target.checked);
@@ -32,65 +46,60 @@ function App() {
 
   const handlePasswordReset = () => {
     sendPasswordResetEmail(auth, email)
-  .then(() => {
-    console.log("Password reset email sent!")
-  })
-  .catch((error) => {
-    console.error(error)
-  });
+      .then(() => {
+        console.log("Password reset email sent!");
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   };
 
   const handleFormSubmit = (event) => {
-    event.preventDefault();
-
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
+      event.preventDefault();
       event.stopPropagation();
-      return;
     }
 
-    if (
-      !/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/.test(
-        password
-      )
-    ) {
-      setError(
-        "Password should contain minimum eight characters, at least one letter, one number and one special character"
-      );
-      return;
+    if (email.value === "") {
+      setEmail({ value: "", error: "Email is required" });
     }
-
+    if (password.value === "") {
+      setPassword({ value: "", error: "Password is required" });
+    }
     setValidated(true);
-    setError("");
-    const auth = getAuth();
 
     if (registered) {
-      signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          console.log(user);
-          setEmail("");
-          setPassword("");
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-    } else {
-      createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          console.log(user);
-          setEmail("");
-          setPassword("");
-
-          // Email verification
-          sendEmailVerification(auth.currentUser).then(() => {
-            console.log("Email verification send");
+      if (email.value & password.value) {
+        signInWithEmailAndPassword(auth, email, password)
+          .then((userCredential) => {
+            const user = userCredential.user;
+            console.log(user);
+            setEmail("");
+            setPassword("");
+          })
+          .catch((error) => {
+            console.error(error);
           });
-        })
-        .catch((error) => {
-          console.error(error);
-        });
+      }
+    } else {
+      if (email.value & password.value) {
+        createUserWithEmailAndPassword(auth, email, password)
+          .then((userCredential) => {
+            const user = userCredential.user;
+            console.log(user);
+            setEmail("");
+            setPassword("");
+
+            // Email verification
+            sendEmailVerification(auth.currentUser).then(() => {
+              console.log("Email verification send");
+            });
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      }
     }
   };
 
@@ -109,12 +118,7 @@ function App() {
               placeholder="Enter email"
               onBlur={handleEmailBlur}
             />
-            <Form.Control.Feedback type="invalid">
-              Please provide a valid email.
-            </Form.Control.Feedback>
-            <Form.Text className="text-muted">
-              We'll never share your email with anyone else.
-            </Form.Text>
+            <Form.Text className="text-danger">{email.error}</Form.Text>
           </Form.Group>
           <Form.Group className="mb-3" controlId="formBasicPassword">
             <Form.Label>Password</Form.Label>
@@ -124,11 +128,8 @@ function App() {
               placeholder="Password"
               onBlur={handlePasswordBlur}
             />
-            <Form.Control.Feedback type="invalid">
-              Please provide a valid password.
-            </Form.Control.Feedback>
+            <Form.Text className="text-danger">{password.error}</Form.Text>
           </Form.Group>
-          <p className="text-danger">{error}</p>
           <Form.Group className="mb-3" controlId="formBasicCheckbox">
             <Form.Check
               onChange={handleRegisteredChange}
